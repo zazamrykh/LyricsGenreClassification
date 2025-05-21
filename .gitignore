@@ -4,3 +4,8 @@ env/
 __pycache__/
 *.pyc
 *.pyo
+
+data/
+source_data/
+merged_genre_lyrics.csv
+all_data.parquet

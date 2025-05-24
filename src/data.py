@@ -13,7 +13,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-from utils import DatasetTypes
+from .utils import DatasetTypes
 
 class LyricsGenreDataset(Dataset):
     def __init__(self, lyrics_list, features, labels, tokenizer, max_length=512):
@@ -59,7 +59,7 @@ def one_hot_encoded_to_genre_list(predictions, idx2genre: dict = None):
 
 def get_datasets(df_path, tokenizer, dataset_type=DatasetTypes.whole, debug=False, train_size=0.7, test_size=0.15, val_size=0.15, random_seed=1337):
     ''' Params:
-            df_path - path to .csv format file. Expected that it have lyrics and genre fields as base. Other fields will go to feature field of dataset
+            df_path - path to .csv format file. Expected that it have 'lyrics' and 'genre' fields as base. Other fields will go to feature field of dataset
         Returns:
             dicts with torch datasets and some extra objects'''
     assert abs(train_size + val_size + test_size - 1.0) < 1e-6, "Sizes must sum to 1.0"

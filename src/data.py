@@ -172,3 +172,15 @@ def get_dataloaders(train_dataset: LyricsGenreDataset, val_dataset: LyricsGenreD
     test_loader = DataLoader(test_dataset, batch_size=batch_size, collate_fn=custom_collate_fn)
     
     return train_loader, val_loader, test_loader
+
+
+
+def init_data(path_to_csv: str,
+             batch_size: int,
+             tokenizer):
+    data_dict = get_datasets(path_to_csv, tokenizer, dataset_type=DatasetTypes.small)
+    train_dataset, val_dataset, test_dataset = data_dict['train_dataset'], data_dict['val_dataset'], data_dict['test_dataset']
+    idx2genre, genre2idx = data_dict['idx2genre'], data_dict['genre2idx']
+    genres = [key for key, _ in genre2idx.items()]
+    traid_loader, val_loader, test_loader = get_dataloaders(train_dataset, val_dataset, test_dataset, batch_size)
+    return train_dataset, val_dataset, test_dataset , idx2genre, genres, traid_loader, val_loader, test_loader

@@ -34,7 +34,7 @@ class ZeroShotClassifier(GenrePredictorInterface):
     def _make_prompts(self, lyrics: str) -> list[str]:
         truncated = lyrics[:self.max_lyrics_length].replace('\n', ' ').replace('"', "'")
         prompts = [self.prompt_template % (truncated, genre) for genre in self.genres]
-        return prompts
+        return prompts 
 
     def _parse_response(self, response: str) -> int:
         try:

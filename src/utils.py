@@ -1,11 +1,10 @@
 import enum
 import logging
+import matplotlib.pyplot as plt
 
 class DatasetTypes(enum.Enum):
     whole = 0  # Returns all dataset
     small = 1  # Returns only 1000 first rows from dataset
-    hundred = 2 # 100 samples in each dataset
-    eight = 3 # 8 samples in each dataset
 
 class Params:
     def __init__(self, exp_name='genre_classification', random_seed=1337, n_epoch=10, batch_size=8, dataset_type=DatasetTypes.whole, 
@@ -27,3 +26,24 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+
+def plot_metrics(history):
+    epochs = range(1, len(history['train_loss']) + 1)
+    plt.figure(figsize=(12, 5))
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, history['train_loss'], label='Train Loss')
+    plt.title('Training Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, history['val_f1'], label='Val F1')
+    plt.plot(epochs, history['val_precision'], label='Val Precision')
+    plt.plot(epochs, history['val_recall'], label='Val Recall')
+    plt.title('Validation Metrics')
+    plt.xlabel('Epoch')
+    plt.ylabel('Score')
+    plt.legend()
+    plt.tight_layout()
+    plt.show()

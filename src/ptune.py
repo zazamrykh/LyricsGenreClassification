@@ -101,7 +101,7 @@ def train(model: AutoModelForCausalLM,
           device: str):
     model.to(device)
     optimizer = AdamW(model.parameters(), lr=learning_rate, weight_decay=1e-5)
-    criterion = FocalLoss(alpha=0.25, gamma=2.0)
+    criterion = torch.nn.BCEWithLogitsLoss()
     num_training_steps = num_epochs * len(train_loader)
 
     lr_scheduler = get_scheduler(

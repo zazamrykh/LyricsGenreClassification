@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 class DatasetTypes(enum.Enum):
     whole = 0  # Returns all dataset
     small = 1  # Returns only 1000 first rows from dataset
+    hundred = 2
+    eight =3
 
 class Params:
     def __init__(self, exp_name='genre_classification', random_seed=1337, n_epoch=10, batch_size=8, dataset_type=DatasetTypes.whole, 

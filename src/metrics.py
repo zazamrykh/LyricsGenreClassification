@@ -1,9 +1,7 @@
 import numpy as np
 from tqdm import tqdm
+import torch
 from sklearn.metrics import precision_score, recall_score, f1_score, confusion_matrix
-
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 from abc import ABC, abstractmethod
 
@@ -20,13 +18,12 @@ class GenrePredictorInterface(ABC):
 def evaluate_model(model: GenrePredictorInterface, dataloader, device='cpu'):
     all_preds = []
     all_targets = []
-
-    for batch in tqdm(dataloader, desc="Evaluating"):
-        targets = batch['labels']
-        preds = model.predict(batch)
-
-        all_preds.append(preds)
-        all_targets.append(targets.cpu().numpy())
+    with torch.no_grad():
+        for batch in tqdm(dataloader, desc="Evaluating"):
+            targets = batch['labels']
+            preds = model.predict(batch)
+            all_preds.append(preds)
+            all_targets.append(targets.cpu().numpy())
 
     y_pred = np.vstack(all_preds)
     y_true = np.vstack(all_targets)
@@ -58,25 +55,20 @@ def evaluate_model(model: GenrePredictorInterface, dataloader, device='cpu'):
     return metrics
 
 
-def plot_error_matrix(error_matrix, idx2genre, figsize=(12, 10), vmax=None):
-    labels = [idx2genre[i] for i in range(len(idx2genre))]
+class GenrePredictorWrapper(GenrePredictorInterface):
+    def __init__(self, model, device, treshold = None):
+        self.model = model
+        self.device = device
+        self.treshold = treshold
 
-    plt.figure(figsize=figsize)
-    sns.heatmap(
-        error_matrix,
-        xticklabels=labels,
-        yticklabels=labels,
-        cmap="Reds",
-        annot=False,
-        fmt="d",
-        linewidths=0.5,
-        vmax=vmax  # можно задать максимум явно для лучшего контраста
-    )
-
-    plt.xlabel("True Label")
-    plt.ylabel("Predicted Label")
-    plt.title("Aggregated Multilabel Error Matrix")
-    plt.xticks(rotation=90)
-    plt.yticks(rotation=0)
-    plt.tight_layout()
-    plt.show()
+    def predict(self, batch_features: dict) -> np.array:
+        self.model.eval()
+        with torch.no_grad():
+            input_ids = batch_features['input_ids'].to(self.device)
+            attention_mask = batch_features['attention_mask'].to(self.device)
+            logits = self.model(input_ids, attention_mask)
+            probs = torch.sigmoid(logits).cpu().numpy()
+            if not self.treshold:
+                self.treshold = 0.1
+            preds = (probs > self.treshold).astype(int)
+        return preds

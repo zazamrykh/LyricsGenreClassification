@@ -4,7 +4,8 @@ env/
 __pycache__/
 *.pyc
 *.pyo
-*.code-workspace
+*.pt
+*.pth
 
 data/
 source_data/

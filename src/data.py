@@ -47,7 +47,7 @@ class LyricsGenreDataset(Dataset):
         }
 
 
-def one_hot_encoded_to_genre_list(predictions, idx2genre: dict = None):
+def one_hot_encoded_to_genre_list(predictions, idx2genre):
     ''' Predictions is array on n_genres size, where 1 if lyrics belongs to that genre and 0 if not'''    
     genre_list = []
     for i, value in enumerate(predictions):
@@ -57,7 +57,7 @@ def one_hot_encoded_to_genre_list(predictions, idx2genre: dict = None):
     return genre_list
 
 
-def get_datasets(df_path, tokenizer, dataset_type=DatasetTypes.whole, debug=False, train_size=0.7, test_size=0.15, val_size=0.15, random_seed=1337):
+def get_datasets(df_path, tokenizer, dataset_type=DatasetTypes.whole, debug=False, train_size=0.7, test_size=0.15, val_size=0.15, random_seed=1337, shuffle=False):
     ''' Params:
             df_path - path to .csv format file. Expected that it have 'lyrics' and 'genre' fields as base. Other fields will go to feature field of dataset
         Returns:
@@ -65,7 +65,11 @@ def get_datasets(df_path, tokenizer, dataset_type=DatasetTypes.whole, debug=Fals
     assert abs(train_size + val_size + test_size - 1.0) < 1e-6, "Sizes must sum to 1.0"
     
     df = pd.read_csv(df_path)
-    df = df[:1000] if dataset_type == DatasetTypes.small else df  # For experiments use
+    
+    if shuffle:
+        df = df.sample(frac=1, random_state=random_seed).reset_index(drop=True)
+        
+    df = df if dataset_type == DatasetTypes.whole else df[:1000]  # For experiments use
 
     if debug: 
         logger.info(str(df.head()))
@@ -138,11 +142,20 @@ def get_datasets(df_path, tokenizer, dataset_type=DatasetTypes.whole, debug=Fals
         logger.info('Train size:', len(X_train))
         logger.info('Val size:', len(X_val))
         logger.info('Test size:', len(X_test))
-        
+    
+    match dataset_type:
+        case DatasetTypes.hundred:
+            X_train, X_val, X_test = X_train[:100], X_val[:100], X_test[:100]
+            y_train, y_val, y_test = y_train[:100], y_val[:100], y_test[:100]
+        case DatasetTypes.eight:
+            X_train, X_val, X_test = X_train[:8], X_val[:8], X_test[:8]
+            y_train, y_val, y_test = y_train[:8], y_val[:8], y_test[:8]
+    
     train_dataset = LyricsGenreDataset(X_train['lyrics'].tolist(), X_train, y_train, tokenizer)
     val_dataset = LyricsGenreDataset(X_val['lyrics'].tolist(), X_val, y_val, tokenizer)
     test_dataset = LyricsGenreDataset(X_test['lyrics'].tolist(), X_test, y_test, tokenizer)
     
+            
     return {
         'train_dataset': train_dataset,
         'val_dataset': val_dataset,
@@ -172,3 +185,17 @@ def get_dataloaders(train_dataset: LyricsGenreDataset, val_dataset: LyricsGenreD
     test_loader = DataLoader(test_dataset, batch_size=batch_size, collate_fn=custom_collate_fn)
     
     return train_loader, val_loader, test_loader
+
+
+
+def init_data(path_to_csv: str,
+             batch_size: int,
+             tokenizer,
+             dataset_type=DatasetTypes.small,
+             shuffle: bool = False):
+    data_dict = get_datasets(path_to_csv, tokenizer, dataset_type=dataset_type)
+    train_dataset, val_dataset, test_dataset = data_dict['train_dataset'], data_dict['val_dataset'], data_dict['test_dataset']
+    idx2genre, genre2idx = data_dict['idx2genre'], data_dict['genre2idx']
+    genres = [key for key, _ in genre2idx.items()]
+    traid_loader, val_loader, test_loader = get_dataloaders(train_dataset, val_dataset, test_dataset, batch_size)
+    return train_dataset, val_dataset, test_dataset , idx2genre, genres, traid_loader, val_loader, test_loader

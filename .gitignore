@@ -4,8 +4,10 @@ env/
 __pycache__/
 *.pyc
 *.pyo
+*.code-workspace
 
 data/
 source_data/
+old_data/
 merged_genre_lyrics.csv
-all_data.parquet
+*.parquet

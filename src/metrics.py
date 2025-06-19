@@ -2,6 +2,9 @@ import numpy as np
 from tqdm import tqdm
 from sklearn.metrics import precision_score, recall_score, f1_score, confusion_matrix
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 from abc import ABC, abstractmethod
 
 # ModelEvalInterface - interface for model evaluation. Model should get row of df as input and then return vector of predictions (prediction if row belongs to some class of not).
@@ -53,3 +56,27 @@ def evaluate_model(model: GenrePredictorInterface, dataloader, device='cpu'):
     }
 
     return metrics
+
+
+def plot_error_matrix(error_matrix, idx2genre, figsize=(12, 10), vmax=None):
+    labels = [idx2genre[i] for i in range(len(idx2genre))]
+
+    plt.figure(figsize=figsize)
+    sns.heatmap(
+        error_matrix,
+        xticklabels=labels,
+        yticklabels=labels,
+        cmap="Reds",
+        annot=False,
+        fmt="d",
+        linewidths=0.5,
+        vmax=vmax  # можно задать максимум явно для лучшего контраста
+    )
+
+    plt.xlabel("True Label")
+    plt.ylabel("Predicted Label")
+    plt.title("Aggregated Multilabel Error Matrix")
+    plt.xticks(rotation=90)
+    plt.yticks(rotation=0)
+    plt.tight_layout()
+    plt.show()
